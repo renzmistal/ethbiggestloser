@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ETH's Biggest Loser</title>
+  <!-- Styling for a fun, meme-like vibe -->
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background-color: #222;
+      color: #fff;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      margin-top: 20px;
+      font-size: 2.5em;
+    }
+    form {
+      margin: 20px auto;
+    }
+    input[type="text"] {
+      padding: 10px;
+      font-size: 1em;
+      width: 300px;
+      border: none;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      border: none;
+      border-radius: 5px;
+      background-color: #ff4757;
+      color: #fff;
+      cursor: pointer;
+    }
+    #info {
+      margin: 10px auto;
+      font-size: 0.9em;
+      color: #ccc;
+    }
+    #disclaimer {
+      margin: 10px auto;
+      font-size: 0.8em;
+      color: #aaa;
+    }
+    #result {
+      margin-top: 20px;
+      min-height: 50px;
+    }
+    /* Spinner styles */
+    .spinner {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #ff4757;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* Leaderboard Section */
+    #leaderboardSection {
+      margin: 30px auto;
+      width: 90%;
+      max-width: 800px;
+      background-color: #333;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    #leaderboardTable {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    #leaderboardTable th, #leaderboardTable td {
+      padding: 10px;
+      border: 1px solid #555;
+    }
+    #leaderboardTable th {
+      background-color: #444;
+    }
+    /* Modal Styles */
+    .modal {
+      display: none; 
+      position: fixed; 
+      z-index: 1000; 
+      left: 0;
+      top: 0;
+      width: 100%; 
+      height: 100%; 
+      overflow: auto; 
+      background-color: rgba(0,0,0,0.8); 
+    }
+    .modal-content {
+      background-color: #444;
+      margin: 10% auto; 
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 500px;
+      border-radius: 10px;
+      position: relative;
+    }
+    .close {
+      color: #aaa;
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .meme-title {
+      font-size: 1.8em;
+      margin-bottom: 10px;
+    }
+    .share-btn {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #1e90ff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>ETH's Biggest Loser</h1>
+  <form id="walletForm">
+    <input type="text" id="walletAddress" placeholder="Enter Ethereum Wallet Address" required>
+    <button type="submit">Check P&L</button>
+  </form>
+  <div id="info">
+    No sign-in required. Just enter your wallet address. Only wallets with at least 10 transactions are considered.
+  </div>
+  <div id="disclaimer">
+    Disclaimer: This is just for fun. Profit/Loss is calculated as: <br>
+    <strong>P/L = Total Received (in ETH) - Total Sent (in ETH)</strong>
+  </div>
+  <div id="result"></div>
+
+  <!-- Leaderboard Section -->
+  <section id="leaderboardSection">
+    <h2>Top 100 Biggest Losers</h2>
+    <table id="leaderboardTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Wallet Address</th>
+          <th>Profit/Loss (ETH)</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboardBody">
+        <tr>
+          <td colspan="3" style="text-align: center;">No data available.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Modal Popup -->
+  <div id="popupModal" class="modal">
+    <div class="modal-content" id="popupContent">
+      <span class="close" id="closeModal">&times;</span>
+      <div class="meme-title">Crypto Memes: Your Loss is Legendary!</div>
+      <div id="popupMessage"></div>
+      <button class="share-btn" id="saveImage">Save as Image</button>
+    </div>
+  </div>
+
+  <!-- html2canvas for capturing the modal as image -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    // Show a spinner in the result div
+    function showSpinner() {
+      document.getElementById('result').innerHTML = '<div class="spinner"></div>';
+    }
+
+    // Update the leaderboard table by fetching data from the backend and add ranking numbers
+    async function updateLeaderboard() {
+      try {
+        const res = await fetch('/.netlify/functions/api/leaderboard');
+        const data = await res.json();
+        const tbody = document.getElementById('leaderboardBody');
+        let html = '';
+        if (data.leaderboard && data.leaderboard.length) {
+          data.leaderboard.forEach((item, index) => {
+            html += `<tr>
+                        <td>${index + 1}</td>
+                        <td>${item.address}</td>
+                        <td>${item.pnl} ETH</td>
+                      </tr>`;
+          });
+        } else {
+          html = '<tr><td colspan="3" style="text-align: center;">No data available.</td></tr>';
+        }
+        tbody.innerHTML = html;
+      } catch (error) {
+        console.error('Error updating leaderboard:', error);
+      }
+    }
+
+    // Modal functions
+    const modal = document.getElementById("popupModal");
+    const closeModal = document.getElementById("closeModal");
+
+    closeModal.onclick = function() {
+      modal.style.display = "none";
+    };
+
+    window.onclick = function(event) {
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    };
+
+    // Save modal content as image using html2canvas
+    document.getElementById("saveImage").addEventListener("click", () => {
+      html2canvas(document.getElementById("popupContent")).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+        const link = document.createElement('a');
+        link.download = 'crypto_loss_meme.png';
+        link.href = imgData;
+        link.click();
+      });
+    });
+
+    // Function to randomly select a popup message for losers and winners
+    function getPopupMessage(pnl) {
+      const loserMessages = [
+        `Your Profit/Loss is ${pnl} ETH. Ouch! Better luck next time, crypto friend.`,
+        `Yikes! You lost ${pnl} ETH. Don't worry, every loser has a story.`,
+        `Oof, ${pnl} ETH down. Welcome to the club of crypto losers!`
+      ];
+      const winnerMessages = [
+        `You're too good! Your Profit/Loss is ${pnl} ETH. This is for losers only. Get out of here!`,
+        `Wow, you made ${pnl} ETH profit! No losers allowed.`,
+        `Success! With ${pnl} ETH in profit, you're clearly not in the loser league.`
+      ];
+      return pnl < 0 
+              ? loserMessages[Math.floor(Math.random() * loserMessages.length)]
+              : winnerMessages[Math.floor(Math.random() * winnerMessages.length)];
+    }
+
+    // Form submission handler
+    document.getElementById('walletForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showSpinner();
+      const address = document.getElementById('walletAddress').value;
+      
+      // Uncomment the next line to simulate a delay for spinner testing:
+      // await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      try {
+        const res = await fetch('/.netlify/functions/api/wallet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address })
+        });
+        const data = await res.json();
+        
+        let resultHTML = '';
+        let popupText = '';
+        if (!data.qualifies) {
+          resultHTML = `<p>${data.message}</p>`;
+          popupText = data.message;
+        } else {
+          resultHTML = `<p>Your Profit/Loss: ${data.pnl} ETH</p>`;
+          popupText = getPopupMessage(data.pnl);
+        }
+        document.getElementById('result').innerHTML = resultHTML;
+        document.getElementById('popupMessage').innerHTML = popupText;
+        modal.style.display = "block";
+      } catch (error) {
+        document.getElementById('result').innerHTML = '<p>Error checking wallet.</p>';
+        console.error('Error checking wallet:', error);
+      }
+      
+      updateLeaderboard();
+    });
+
+    // Initial leaderboard load on page load
+    updateLeaderboard();
+  </script>
+</body>
+</html>
