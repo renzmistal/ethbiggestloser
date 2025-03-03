@@ -1,16 +1,7 @@
 [build]
   publish = "public"
   functions = "functions"
-  command = "npm run build"  # (optional) if you have a build step; otherwise, you can remove this line
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
-[build]
-  publish = "public"
-  functions = "functions"
-  command = "npm run build"  # (optional) if you have a build step; otherwise, you can remove this line
+  # command = "npm run build"  # Uncomment if you have a build step
 
 [[redirects]]
   from = "/api/*"
