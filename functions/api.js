@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const serverless = require('serverless-http');
+
 const app = express();
 
 // Use an environment variable for the API key if available
@@ -14,7 +15,7 @@ let leaderboard = [];
 app.use(express.json());
 
 // Endpoint to check wallet and calculate P/L
-app.post('/wallet', async (req, res) => {
+app.post('/api', async (req, res) => {
   try {
     const { address } = req.body;
     if (!address) {
@@ -76,7 +77,7 @@ app.post('/wallet', async (req, res) => {
       leaderboard
     });
   } catch (error) {
-    console.error("Error in /wallet endpoint:", error);
+    console.error("Error in /api endpoint:", error);
     return res.status(500).json({ error: 'Error checking wallet.' });
   }
 });
