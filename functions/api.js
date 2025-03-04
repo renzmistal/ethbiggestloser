@@ -15,7 +15,7 @@ let leaderboard = [];
 app.use(express.json());
 
 // Endpoint to check wallet and calculate P/L
-app.post('/api', async (req, res) => {
+app.post('/api/wallet', async (req, res) => {
   try {
     const { address } = req.body;
     if (!address) {
@@ -77,17 +77,17 @@ app.post('/api', async (req, res) => {
       leaderboard
     });
   } catch (error) {
-    console.error("Error in /api endpoint:", error);
+    console.error("Error in /api/wallet endpoint:", error);
     return res.status(500).json({ error: 'Error checking wallet.' });
   }
 });
 
 // Endpoint to fetch the current leaderboard
-app.get('/leaderboard', (req, res) => {
+app.get('/api/leaderboard', (req, res) => {
   try {
     return res.json({ leaderboard });
   } catch (error) {
-    console.error("Error in /leaderboard endpoint:", error);
+    console.error("Error in /api/leaderboard endpoint:", error);
     return res.status(500).json({ error: 'Error fetching leaderboard.' });
   }
 });
