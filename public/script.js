@@ -99,41 +99,12 @@ async function checkWallet(address) {
         // Show modal
         modal.style.display = "block";
 
-        // Update leaderboard if available
-        updateLeaderboard(data.leaderboard);
-
     } catch (error) {
         console.error('Error:', error);
         errorDiv.textContent = 'Error checking wallet. Please try again.';
         resultDiv.textContent = '';
         checkButton.disabled = false;
     }
-}
-
-function updateLeaderboard(leaderboard) {
-    const leaderboardBody = document.querySelector('#leaderboardBody');
-    if (!leaderboardBody || !leaderboard) return;
-
-    if (leaderboard.length === 0) {
-        leaderboardBody.innerHTML = `
-            <tr>
-                <td colspan="3" style="text-align: center;">No data available.</td>
-            </tr>
-        `;
-        return;
-    }
-
-    const html = leaderboard
-        .map((entry, index) => `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${entry.address.slice(0, 6)}...${entry.address.slice(-4)}</td>
-                <td class="negative">${entry.pnl.toFixed(4)} ETH</td>
-            </tr>
-        `)
-        .join('');
-
-    leaderboardBody.innerHTML = html;
 }
 
 // Event Listeners
@@ -143,20 +114,6 @@ checkButton?.addEventListener('click', () => {
         checkWallet(address);
     }
 });
-
-// Optional: Load leaderboard on page load
-async function loadLeaderboard() {
-    try {
-        const response = await fetch(`${API_BASE}/leaderboard`);
-        const data = await response.json();
-        updateLeaderboard(data.leaderboard);
-    } catch (error) {
-        console.error('Error loading leaderboard:', error);
-    }
-}
-
-// Load leaderboard when page loads
-document.addEventListener('DOMContentLoaded', loadLeaderboard);
 
 // Add image saving functionality
 document.getElementById("saveImage").addEventListener("click", () => {
