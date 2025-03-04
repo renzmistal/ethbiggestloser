@@ -1,26 +1,15 @@
 const express = require('express');
+const serverless = require('serverless-http');
 const axios = require('axios');
-const path = require('path');
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 const ETHERSCAN_API_KEY = 'C12FP7BFRQ53RA92W5VVQWBZG1WQ3H9GY6';
 const ETHERSCAN_BASE_URL = 'https://api.etherscan.io/api';
 
-// In-memory leaderboard based solely on submitted wallets (no duplicates)
+// In-memory leaderboard (Note: this will reset when function cold starts)
 let leaderboard = [];
 
-// Middleware to parse JSON bodies and serve static files
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Add CORS middleware for local development
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    next();
-});
 
 // Helper: Fetch transactions for a given wallet address
 async function fetchTransactions(address) {
@@ -39,8 +28,7 @@ async function fetchTransactions(address) {
   }
 }
 
-// Helper: Calculate profit and loss (P&L) for a wallet.
-// Simplified: P&L = totalReceived - totalSent (in ETH)
+// Helper: Calculate profit and loss (P&L) for a wallet
 function calculatePnL(transactions, wallet) {
   let totalSent = 0;
   let totalReceived = 0;
@@ -56,8 +44,8 @@ function calculatePnL(transactions, wallet) {
   return totalReceived - totalSent;
 }
 
-// Endpoint: Process a wallet submission and calculate its P&L
-app.post('/api/wallet', async (req, res) => {
+// Modified routes to work with Netlify
+app.post('/.netlify/functions/api/wallet', async (req, res) => {
   const { address } = req.body;
   if (!address) {
     return res.status(400).json({ error: 'Wallet address is required' });
@@ -100,11 +88,9 @@ app.post('/api/wallet', async (req, res) => {
   });
 });
 
-// Endpoint: Get the current leaderboard (top 100 losing wallets from submissions)
-app.get('/api/leaderboard', (req, res) => {
+app.get('/.netlify/functions/api/leaderboard', (req, res) => {
   res.json({ leaderboard });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Export handler for Netlify
+exports.handler = serverless(app); 
